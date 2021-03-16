@@ -1,2 +1,4 @@
 /week-1.iml
 /.idea/
+*.iml
+/demo-rest-api
