@@ -1,6 +1,7 @@
 package main
 
 import (
+	service "./services"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -28,29 +29,10 @@ var tasks = allTask{
 	},
 }
 
-//MONGO_DB_ATLAS=mongodb+srv://{user}:{password}@clustertest.loyxx.mongodb.net/{name_bd}
 func indexRoute(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprintf(w, "Welcome to my api")
 }
-func getTasks(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tasks)
-}
-func createTask(w http.ResponseWriter, r *http.Request) {
-	var newTask task
-	reqBody, error := ioutil.ReadAll(r.Body)
-	if error != nil {
-		fmt.Fprintf(w, "Ingrese datos correctos")
 
-	}
-	json.Unmarshal(reqBody, &newTask)
-	newTask.ID = len(tasks) + 1
-	tasks = append(tasks, newTask)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(newTask)
-
-}
 func getTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
@@ -104,8 +86,8 @@ func updateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reqBody, error := ioutil.ReadAll(r.Body)
-	if error != nil {
+	reqBody, err2 := ioutil.ReadAll(r.Body)
+	if err2 != nil {
 		fmt.Fprintf(w, "Datos no validos")
 	}
 	var newTask task
@@ -128,10 +110,11 @@ func updateTask(w http.ResponseWriter, r *http.Request) {
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", indexRoute)
-	router.HandleFunc("/tasks", getTasks).Methods("GET")
-	router.HandleFunc("/tasks", createTask).Methods("POST")
+	router.HandleFunc("/tasks", service.GetAll).Methods("GET")
+	router.HandleFunc("/tasks", service.Create).Methods("POST")
 	router.HandleFunc("/tasks/{id}", getTask).Methods("GET")
 	router.HandleFunc("/tasks/{id}", deletTask).Methods("DELETE")
 	router.HandleFunc("/tasks/{id}", updateTask).Methods("PUT")
 	log.Fatal(http.ListenAndServe(":3000", router))
+
 }
