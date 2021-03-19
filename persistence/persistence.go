@@ -1,10 +1,14 @@
 package persistence
 
 import (
+	"time"
+
 	"../model"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
 
 func CreateTask(task *model.Task) error {
 	_, err := collection.InsertOne(ctx, task)
@@ -39,4 +43,34 @@ func filterTasks(filter interface{}) ([]*model.Task, error) {
 		return tasks, mongo.ErrNoDocuments
 	}
 	return tasks, nil
+}
+
+func Completed(id string) error {
+	docID, _ := primitive.ObjectIDFromHex(id)
+	_, err := collection.UpdateOne(
+		ctx,
+		bson.M{"_id": docID},
+		bson.M{
+			"$set": bson.M{"completed": true, "updated_at": time.Now()},
+		},
+	)
+	return err
+
+}
+
+func ExistID(id string) error {
+	docID, _ := primitive.ObjectIDFromHex(id)
+	filter := bson.M{"_id": docID}
+	t := model.Task{}
+	return collection.FindOne(ctx, filter).Decode(&t)
+
+}
+
+func Delete (id string) error {
+	docID, _ := primitive.ObjectIDFromHex(id)
+	_,err := collection.DeleteOne(
+		ctx,
+		bson.M{"_id": docID},
+		)
+		return err 
 }
